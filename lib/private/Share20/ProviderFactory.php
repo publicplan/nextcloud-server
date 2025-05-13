@@ -50,6 +50,8 @@ class ProviderFactory implements IProviderFactory {
 	private $circlesAreNotAvailable = false;
 	/** @var \OCA\Talk\Share\RoomShareProvider */
 	private $roomShareProvider = null;
+	/** @var \OCA\VO_Federation\FederatedGroupShareProvider */
+	private $federatedGroupShareProvider = null;
 
 	private $registeredShareProviders = [];
 
@@ -258,6 +260,31 @@ class ProviderFactory implements IProviderFactory {
 	}
 
 	/**
+	 * Create the federated group share provider
+	 *
+	 * @return FederatedGroupShareProvider
+	 */
+	protected function getFederatedGroupShareProvider() {
+		if ($this->federatedGroupShareProvider === null) {
+			/*
+			 * Check if the app is enabled
+			 */
+			$appManager = $this->serverContainer->getAppManager();
+			if (!$appManager->isEnabledForUser('vo_federation')) {
+				return null;
+			}
+
+			try {
+				$this->federatedGroupShareProvider = $this->serverContainer->query('\OCA\VO_Federation\FederatedGroupShareProvider');
+			} catch (\OCP\AppFramework\QueryException $e) {
+				return null;
+			}
+		}
+
+		return $this->federatedGroupShareProvider;
+	}	
+
+	/**
 	 * @inheritdoc
 	 */
 	public function getProvider($id) {
@@ -276,6 +303,8 @@ class ProviderFactory implements IProviderFactory {
 			$provider = $this->getShareByCircleProvider();
 		} elseif ($id === 'ocRoomShare') {
 			$provider = $this->getRoomShareProvider();
+		} elseif ($id === 'ocFederatedGroupShare') {
+			$provider = $this->getFederatedGroupShareProvider();
 		}
 
 		foreach ($this->registeredShareProviders as $shareProvider) {
@@ -325,6 +354,8 @@ class ProviderFactory implements IProviderFactory {
 			$provider = $this->getProvider('deck');
 		} elseif ($shareType === IShare::TYPE_SCIENCEMESH) {
 			$provider = $this->getProvider('sciencemesh');
+		} elseif ($shareType === IShare::TYPE_FEDERATED_GROUP) {
+			$provider = $this->getFederatedGroupShareProvider();
 		}
 
 
@@ -349,6 +380,10 @@ class ProviderFactory implements IProviderFactory {
 		if ($roomShare !== null) {
 			$shares[] = $roomShare;
 		}
+		$federatedGroupShare = $this->getFederatedGroupShareProvider();
+		if ($federatedGroupShare !== null) {
+			$shares[] = $federatedGroupShare;
+		}		
 
 		foreach ($this->registeredShareProviders as $shareProvider) {
 			try {

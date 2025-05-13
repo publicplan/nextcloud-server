@@ -197,6 +197,7 @@ export default {
 			if (this.isExternal) {
 				shareType.push(ShareType.Remote)
 				shareType.push(ShareType.RemoteGroup)
+				shareType.push(ShareType.FederatedGroup)
 			} else {
 				// Merge shareType array
 				shareType = shareType.concat([
@@ -439,6 +440,11 @@ export default {
 				return {
 					icon: 'icon-sciencemesh',
 					iconTitle: t('files_sharing', 'ScienceMesh'),
+				}
+			case this.SHARE_TYPES.SHARE_TYPE_FEDERATED_GROUP:
+				return {
+					icon: 'icon-organization',
+					iconTitle: t('files_sharing', 'Virtual organization'),
 				}
 			default:
 				return {}
